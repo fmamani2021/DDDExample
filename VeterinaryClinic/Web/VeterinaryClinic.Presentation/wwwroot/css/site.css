@@ -1,0 +1,30 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+
+
+
+.k-window > div.k-window-titlebar {
+    height: 40px !important;
+    margin-top: -39px !important;
+}
+
+.k-window > div.k-popup-edit-form {
+    padding: 20px !important;
+}

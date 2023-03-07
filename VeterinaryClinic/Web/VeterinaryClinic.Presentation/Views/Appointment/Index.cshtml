@@ -1,0 +1,217 @@
+﻿@using System.Text.Json
+
+@{
+    ViewData["Title"] = "Appointment";
+}
+   
+<div id="view_scheduler" class="row">    
+    <div id="custom_scheduler" 
+        data-role="scheduler"
+        data-height=900
+        data-editable="{ 
+            mode: 'popup',     
+            window: {
+                title: 'Create Appointment',
+                animation: true                
+            },
+            template: $('#editor').html() }"
+        data-bind="source: scheduler.dataSource, 
+        events: {
+            save: scheduler.events.save,
+            edit: scheduler.events.edit,
+            remove: scheduler.events.remove,
+            add: scheduler.events.add,
+            dataBinding: scheduler.events.dataBinding,
+            dataBound: scheduler.events.dataBound
+        }"
+        data-views="[{ 
+            type: 'day',
+            title: 'Day', 
+            eventHeight: 40,
+            eventTemplate: $('#event-template').html(),
+            dateHeaderTemplate: $('#event-template-h').html(),            
+        }]"        
+        data-group="{
+                resources: ['Rooms'],
+                orientation: 'horizontal'
+        }"
+        data-resources="[{                    
+                field: 'roomId',
+                name: 'Rooms',
+                dataSource: viewConfigs.dataSources.roomsGroped,
+                title: 'Room'
+        }]"
+        data-auto-bind="true"    
+        data-show-work-hours="true"/>           
+</div>
+
+<script id="editor" type="text/x-kendo-template">
+    <div class="col-xs-12">        
+        <div class="row mb-3">
+            <label for="inputTitle" class="col-sm-3 col-form-label">Title</label>
+            <div class="col-sm-9">
+                <input id="name" type="text"
+                       class="form-control"
+                       placeholder="Enter Name"
+                       data-bind="value: title">
+            </div>
+        </div>        
+        <div class="row mb-3">
+            <label for="inputClient" class="col-sm-3 col-form-label">Client</label>
+            <div class="col-sm-9">
+                <div id="ddlClient" class="form-control"
+                        style="width: 100%"
+                        data-role="dropdownlist"
+                        data-bind="
+                            value: clientId,
+                            source: clients.dataSource",
+                        data-value-field="clientId"
+                        data-text-field="fullName"
+                        data-value-primitive="true"
+                        data-option-label=" ">
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3" data-bind="visible: patients.isVisible">
+            <label for="inputPatient" class="col-sm-3 col-form-label">Patient</label>
+            <div class="col-sm-9">
+              <div class="form-control"
+                     style="width: 100%"
+                     data-role="dropdownlist"
+                     data-bind="
+                        value: patientId,
+                        source: patients.dataSource"
+                     data-value-field="patientId"
+                     data-text-field="name"
+                     data-value-primitive="true"
+                     data-option-label=" ">
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="inputDoctor" class="col-sm-3 col-form-label">Doctor</label>
+            <div class="col-sm-9">
+              <div class="form-control"
+                     style="width: 100%"
+                     data-role="dropdownlist"
+                     data-bind="
+                        value: doctorId,
+                        source: doctors.dataSource"
+                     data-value-field="doctorId"
+                     data-text-field="name"
+                     data-value-primitive="true"
+                     data-option-label=" ">
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="inputAppoitmentType" class="col-sm-3 col-form-label">Appt.Type</label>
+            <div class="col-sm-9">
+              <div id="ddlAppointmentType" class="form-control"
+                     style="width: 100%"
+                     data-role="dropdownlist"
+                     data-bind="
+                        value: appointmentTypeId,
+                        source: appointmentTypes.dataSource"
+                     data-value-field="appointmentTypeId"
+                     data-text-field="name"
+                     data-value-primitive="true"
+                     data-option-label=" ">
+                </div>
+            </div>
+        </div>
+ 
+        <div class="row mb-3">
+            <label for="inputStart" class="col-sm-3 col-form-label">Start</label>
+            <div class="col-sm-9">
+              <input disabled data-role="datetimepicker" name="start" id="inputStart"/>
+            </div>
+        </div>
+ 
+        <div class="row mb-3">
+            <label for="inputEnd" class="col-sm-3 col-form-label">End</label>
+            <div class="col-sm-9">
+              <input disabled data-role="datetimepicker" name="end" id="inputEnd"/>
+            </div>
+        </div>  
+    </div>
+</script>
+
+<script id="event-template" type="text/x-kendo-template">
+    <div class="col-xs-12">
+        #=title#
+    </div>
+</script>
+
+<script id="event-template-h" type="text/x-kendo-template">
+    <span class='k-link k-nav-day'>#=kendo.toString(date, 'ddd dd/MM')#</span>
+</script>
+
+<script src="~/js/app/AppointmentMaintenance.js"></script>
+<script>    
+    let scheduleId = '@(Html.Raw(ViewBag.ScheduleId))';
+    let doctors = @(Html.Raw(JsonSerializer.Serialize(ViewBag.Doctors, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })));
+    let clients = @(Html.Raw(JsonSerializer.Serialize(ViewBag.Clients, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })));
+    let rooms = @(Html.Raw(JsonSerializer.Serialize(ViewBag.Rooms, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })));
+    let appointmentTypes = @(Html.Raw(JsonSerializer.Serialize(ViewBag.AppointmentTypes, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })));
+    
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl('@ViewBag.HubAppointment')
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+    function start() {
+        try {
+            connection.start();
+            console.log("SignalR Connected.");
+        } catch (err) {
+            console.log("SignalR error:", err);
+            setTimeout(start, 5000);
+        }
+    };
+
+    connection.onclose(() => {
+        console.log("SignalR onClose.");
+        start();
+    });
+
+    start();
+
+    let viewConfigs = {
+        scheduleId,
+        dataSources: {
+            doctors: doctors,            
+            clients: clients,
+            rooms: rooms,
+            roomsGroped: getRoomsForDataSourceGroup(rooms),
+            appointmentTypes: appointmentTypes            
+        },        
+        urls: {
+            read:   '@Url.Action("Read", "Appointment")',
+            create: '@Url.Action("Create", "Appointment")',
+            update: '@Url.Action("Update", "Appointment")',
+            delete: '@Url.Action("Delete", "Appointment")',
+            listByClientId: '@Url.Action("ListByClientId", "Patient")'
+        },
+        signalrConnection: connection
+    }
+
+    var appointmentMaintenance = new AppointmentMaintenance(viewConfigs);
+    $(function () {
+        appointmentMaintenance.onReady();
+    })
+
+    function getRoomsForDataSourceGroup(rooms) {
+        var roomsGroup = [];
+        rooms.forEach(item => {
+            roomsGroup.push({
+                value: item.roomId,
+                text: item.name
+                //color: "#2572c0"
+            })
+        });
+        return roomsGroup;
+    }
+
+</script>
+

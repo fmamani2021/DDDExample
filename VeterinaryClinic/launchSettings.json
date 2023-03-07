@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "veterinaryclinic-appointment-api": "StartDebugging",
+        "veterinaryclinic-management-api": "StartDebugging",
+        "veterinaryclinic-presentation": "StartDebugging",
+        "veterinaryclinic.managementmodule.api": "StartDebugging"
+      }
+    }
+  }
+}

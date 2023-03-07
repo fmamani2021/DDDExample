@@ -1,0 +1,2 @@
+﻿-- RUN THIS FROM VeterinaryClinic.AppointmentModule.Infrastructure project folder
+Add-Migration MIGRATIONNAME -OutputDir Data/Migrations -Context AppDbContext -StartupProject VeterinaryClinic.AppointmentModule.Api 

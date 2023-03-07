@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Services\AppointmentService\VeterinaryClinic.AppointmentModule.Shared\VeterinaryClinic.AppointmentModule.Shared.csproj" />
+    <ProjectReference Include="..\..\Services\ManagementService\VeterinaryClinic.ManagementModule.Shared\VeterinaryClinic.ManagementModule.Shared.csproj" />
+    <ProjectReference Include="..\..\SharedKernel\VeterinaryClinic.SharedKernel\VeterinaryClinic.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\app\AppointmentMaintenance.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.2" />
+  </ItemGroup>
+
+</Project>

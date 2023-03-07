@@ -1,0 +1,102 @@
+version: '3.4'
+name: veterinary-clinic
+services:
+  rabbitmq:
+    image: 'rabbitmq:3-management-alpine'
+    container_name: veterinaryclinic.rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest      
+    ports: # uses 5672 internally
+      - '15673:15672'      
+    volumes:
+      - '~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/fmamani/'
+    networks:
+      - veterinary-clinic-backend
+
+  veterinaryclinic-appointment-db:
+    image: 'mcr.microsoft.com/mssql/server:2022-latest'
+    container_name: veterinaryclinic-appointment-db
+    environment:
+      SA_PASSWORD: P@ssW0rd!
+      ACCEPT_EULA: 'Y'      
+    ports:
+      - '1435:1433' #For testing connect to localhost,1435
+    networks:
+      - veterinary-clinic-backend
+
+  veterinaryclinic-appointment-api:
+    build:
+      context: .
+      dockerfile: Services/AppointmentService/VeterinaryClinic.AppointmentModule.Api/Dockerfile
+    image: veterinaryclinic-appointment-api
+    container_name: veterinaryclinic-appointment-api
+    ports:
+      - '5100:80'
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - 'ASPNETCORE_URLS=http://+'
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - veterinaryclinic-appointment-db
+    networks:
+      - veterinary-clinic-backend
+      - veterinary-clinic-frontend
+
+  veterinaryclinic-management-db:
+    image: 'mcr.microsoft.com/mssql/server:2022-latest'
+    container_name: veterinaryclinic-management-db
+    environment:
+      SA_PASSWORD: P@ssW0rd!
+      ACCEPT_EULA: 'Y'
+    ports:
+      - '1436:1433' #For testing connect to localhost,1435
+    networks:
+      - veterinary-clinic-backend
+
+  veterinaryclinic-management-api:
+    build:
+      context: .
+      dockerfile: Services/ManagementService/VeterinaryClinic.ManagementModule.Api/Dockerfile
+    image: veterinaryclinic-management-api
+    container_name: veterinaryclinic-management-api
+    ports:
+      - '6200:80'
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - 'ASPNETCORE_URLS=http://+'
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - veterinaryclinic-management-db
+    networks:
+      - veterinary-clinic-backend
+      - veterinary-clinic-frontend
+
+  veterinaryclinic-presentation:
+    build:
+      context: .
+      dockerfile: Web/VeterinaryClinic.Presentation/Dockerfile
+    image: veterinaryclinic-presentation
+    container_name: veterinaryclinic-presentation
+    ports:
+      - '7100:80'
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - 'ASPNETCORE_URLS=http://+'
+    restart: on-failure
+    depends_on:
+      - veterinaryclinic-appointment-api
+      - veterinaryclinic-management-api
+    networks:
+      - veterinary-clinic-frontend
+
+networks:
+  veterinary-clinic-frontend:
+    name: veterinary-clinic-frontend  
+    driver: bridge
+  veterinary-clinic-backend:
+    name: veterinary-clinic-backend  
+    driver: bridge
+
